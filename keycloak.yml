@@ -1,0 +1,78 @@
+# kubectl apply -f keycloak.yml -n kc-azure-prod 
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak-service
+  namespace: kc-azure-prod
+  labels:
+    app: keycloak
+spec:
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: keycloak
+  type: NodePort
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: kc-azure-prod
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - name: keycloak
+        image: asia-south1-docker.pkg.dev/altorapro-prod-sso/keycloak-azure-prod/custom-image-deploy:v21.0
+        args: ["start", "--db=postgres", "--proxy=edge"]
+        envFrom:
+          - secretRef:
+              name: keycloak-secrets
+        env: 
+        - name: KC_DB_URL_HOST
+          valueFrom:
+            secretKeyRef:
+              name: cloudsqlsecret
+              key: db_host
+        ports:
+        - name: http
+          containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+          initialDelaySeconds: 90
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+          initialDelaySeconds: 300
+          periodSeconds: 30
+        resources:
+            limits:
+              memory: 512Mi
+              cpu: "1"
+            requests:
+              memory: 256Mi
+              cpu: "0.2"
+      imagePullSecrets:
+        - name: gar-secret
+
+
+# note: 
+# image name format : <DOCKER-URL>/<PROJECT-ID>/<REPOSITORY-NAME>/<IMAGE-NAME-FROM-ARTIFACT>:<TAG if exists>
