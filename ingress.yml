@@ -1,0 +1,30 @@
+# kubectl apply -f ingress.yml -n kc-azure-prod
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: keycloak-ingress
+  namespace: kc-azure-prod
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: kc-prod-static-ingress-ip
+    kubernetes.io/ingress.allow-http: "true"
+    # cert-manager.io/issuer: letsencrypt-production
+    # acme.cert-manager.io/http01-edit-in-place: "true"
+spec:
+  ingressClassName: gce
+  # tls:
+  # - hosts:
+  #   - login.mywebsite.com
+  #   secretName: tls-secrets
+  rules:
+  - host: login.mywebsite.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: keycloak-service
+            port:
+              number: 8080
