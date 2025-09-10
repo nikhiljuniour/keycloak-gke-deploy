@@ -1,0 +1,6 @@
+# kubectl apply -f namespace.yml
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kc-azure-prod
