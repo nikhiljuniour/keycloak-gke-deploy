@@ -1,0 +1,21 @@
+# step 1: kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.17.0/cert-manager.yaml
+# note: wait for 5 mins for cert manager pods to run
+
+# step 2: kubectl apply -f issuer.yml -n kc-azure-prod
+
+
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-production
+  namespace: kc-azure-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: nikhil.singh@code-b.dev
+    privateKeySecretRef:
+      name: letsencrypt-production
+    solvers:
+    - http01:
+        ingress:
+          name: keycloak-ingress
